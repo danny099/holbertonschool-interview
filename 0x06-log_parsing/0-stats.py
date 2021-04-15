@@ -1,43 +1,45 @@
 #!/usr/bin/python3
-""" log parsing """
+"""Program that reads stdin line by line and computes metrics"""
+from sys import stdin
 
-from signal import signal, SIGINT
-import sys
+
+statusCode = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0
+}
+totalSize = 0
+
+
+def printStat():
+    """Function that print log accumulately"""
+    print("File size: {}".format(totalSize))
+    for x in sorted(statusCode.keys()):
+        if statusCode[x]:
+            print("{}: {}".format(x, statusCode[x]))
+
 
 if __name__ == "__main__":
-    i = 1
-    file_size = 0
-    status_list = {"200": 0,
-                   "301": 0,
-                   "400": 0,
-                   "401": 0,
-                   "403": 0,
-                   "404": 0,
-                   "405": 0,
-                   "500": 0}
-
+    ct = 0
     try:
-        for line in sys.stdin:
+        for y in stdin:
             try:
-                status_code = line.split()[-2]
-                if status_code in status_list:
-                    status_list[status_code] += 1
-                file_size += int(line.split()[-1])
-                if i % 10 == 0:
-                    print("File size: {}".format(file_size))
-                    for k, v in sorted(status_list.items()):
-                        if v:
-                            print("{}: {}".format(k, v))
-                i += 1
+                item = y.split()
+                totalSize += int(item[-1])
+                if item[-2] in statusCode:
+                    statusCode[item[-2]] += 1
             except:
                 pass
+            if ct == 9:
+                printStat()
+                ct = -1
+            ct += 1
     except KeyboardInterrupt:
-        print("File size: {}".format(file_size))
-        for k, v in sorted(status_list.items()):
-            if v:
-                print("{}: {}".format(k, v))
+        printStat()
         raise
-    print("File size: {}".format(file_size))
-    for k, v in sorted(status_list.items()):
-        if v:
-            print("{}: {}".format(k, v))
+    printStat()
